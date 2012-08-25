@@ -1,0 +1,43 @@
+=head1 NAME
+
+GenericDashboardStats
+
+=head1 DESCRIPTION
+
+As of today (Aug 2012) the 7 day statistic widget for the dashboard knows only two stats: closed tickets and created tickets.
+
+This is not enough and to add new stats to that widget or change the current ones you need programming skills.
+
+C<GenericDashboardStats> allows to add/change stats easily with new configuration files for the SysConfig. So you can show the stats you want.
+
+=head1 CREATE NEW STATS
+
+To create new stats you have to add only your own configuration file. The subsequent sections show different types of stats.
+
+=head2 The "standard" closed ticket graph
+
+Create a file C<$OTRS_HOME/Kernel/Config/Files/AnyName.xml> where "AnyName" can be whatever you want. Though I recommend to name it the same way you want to name the graph.
+
+The XML file has this content:
+
+  <?xml version="1.0" encoding="utf-8"?>
+  <otrs_config version="1.0" init="Application">
+    <CVS>$Id: Ticket.xml,v 1.500 2012/02/14 08:59:22 mg Exp $</CVS>
+    <ConfigItem Name="GenericDashboardStats::Stats###030-Closed" Required="0" Valid="1">
+        <Description Translatable="1">How many tickets were created the day</Description>
+        <Group>GenericDashboardStats</Group>
+        <SubGroup>Stats</SubGroup>
+        <Setting>
+            <Hash>
+                <Item Key="OptionKey">ClosedStats</Item>
+                <Item Key="type">TicketClose</Item>
+                <Item Key="color">#eeff00</Item>
+                <Item Key="label">Closed</Item>
+            </Hash>
+        </Setting>
+    </ConfigItem>
+  </otrs_config>
+
+That's it! Nothing more.
+
+Now, what does the settings mean?
