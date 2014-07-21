@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <otrs_package version="1.0">
-    <CVS>$Id: GenericDashboardStats.sopm,v 1.4 2011/04/18 11:44:21 rb Exp $</CVS>
     <Name>GenericDashboardStats</Name>
-    <Version>0.0.1</Version>
+    <Version>3.3.1</Version>
+    <Framework>3.0.x</Framework>
     <Framework>3.1.x</Framework>
+    <Framework>3.2.x</Framework>
+    <Framework>3.3.x</Framework>
     <Vendor>Perl-Services.de</Vendor>
     <URL>http://perl-services.de/</URL>
     <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
     <Description Lang="en">A more generic Dashboard stats widget.</Description>
     <Description Lang="de">Ein generisches Statistik Modul für die Übersicht.</Description>
     <Filelist>
-        <File Permission="644" Location="Kernel/Output/HTML/DashboardGenericStats.pm"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/DashboardGenericStats.pm"/>
         <File Permission="644" Location="Kernel/Config/Files/GenericDashboardStats.xml"/>
     </Filelist>
 </otrs_package>
