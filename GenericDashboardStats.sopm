@@ -11,5 +11,6 @@
     <Filelist>
         <File Permission="644" Location="Custom/Kernel/Output/HTML/DashboardGenericStats.pm"/>
         <File Permission="644" Location="Kernel/Config/Files/GenericDashboardStats.xml"/>
+        <File Permission="644" Location="doc/en/GenericDashboardStats.pod"/>
     </Filelist>
 </otrs_package>
