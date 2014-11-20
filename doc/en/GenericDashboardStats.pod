@@ -41,3 +41,14 @@ The XML file has this content:
 That's it! Nothing more.
 
 Now, what does the settings mean?
+
+=head1 REPOSITORY & BUGS
+
+The code repository and a bugtracker are available at L<http://github.com/reneeb/otrs-GenericDashboardStats>
+
+=head1 AUTHOR AND LICENCE
+
+  License: AGPL
+
+Renee Baecker C<info@perl-services.de>
+
