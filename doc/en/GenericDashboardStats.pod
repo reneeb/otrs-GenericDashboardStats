@@ -42,6 +42,87 @@ That's it! Nothing more.
 
 Now, what does the settings mean?
 
+=over 4
+
+=item * OptionKey
+
+The OptionKey is just a unique key for this graph. This is used to define the name of an other SysConfig option that defines more search parameters (see second example below).
+
+=item * type
+
+Define what time-parameter is used for the ticket search. You can use the following values:
+
+=over 4
+
+=item * TicketCreate
+
+Tickets created on the given day.
+
+=item * TicketClose
+
+Tickets closed on the given day.
+
+=item * TicketChange
+
+Tickets changed on the given day.
+
+=item * TicketPending
+
+=item * TicketEscalation
+
+=item * TicketEscalationUpdate
+
+=item * TicketEscalationResponse
+
+=item * TicketEscalationSolution
+
+=item * ArticleCreate
+
+articles with create time after ... (article newer than this date).
+
+=back
+
+=item * color
+
+Color of the graph.
+
+=item * label
+
+Mouse over label for the graph.
+
+=back
+
+An other example: Show graph of ticket that were created in queue "Junk"
+
+  <?xml version="1.0" encoding="utf-8"?>
+  <otrs_config version="1.0" init="Application">
+      <ConfigItem Name="GenericDashboardStats::Stats###001-Created-Junk" Required="0" Valid="1">
+          <Description Translatable="1">How many tickets were created the day in the queue Junk</Description>
+          <Group>GenericDashboardStats</Group>
+          <SubGroup>Stats</SubGroup>
+          <Setting>
+              <Hash>
+                  <Item Key="OptionKey">CreatedJunkStats</Item>
+                  <Item Key="type">TicketCreate</Item>
+                  <Item Key="color">#eeff00</Item>
+                  <Item Key="label">Created In Junk</Item>
+              </Hash>
+          </Setting>
+      </ConfigItem>
+      <ConfigItem Name="CreatedJunkStats###Queues" Required="0" Valid="1">
+          <Description Translatable="1">Define the Queues the CreatedJunkStats stat is for</Description>
+          <Group>GenericDashboardStats</Group>
+          <SubGroup>CreatedJunkStats</SubGroup>
+          <Setting>
+              <Array>
+                  <Item>Junk</Item>
+              </Array>
+          </Setting>
+      </ConfigItem>
+  </otrs_config>
+
+The first I<ConfigItem> part is described above. The second one adds more search paramters. The name of the item is created by the value of I<OptionKey> in the first config option then "###" and the last part of the name is the search option. At L<http://otrs.perl-services.de/docs/otrs/rel-3_3/kernel_system_ticketsearch.html> you can see all the options for the ticket search.
+
 =head1 REPOSITORY & BUGS
 
 The code repository and a bugtracker are available at L<http://github.com/reneeb/otrs-GenericDashboardStats>
