@@ -1,8 +1,6 @@
 # --
 # Kernel/Output/HTML/DashboardGenericStats.pm
-# Copyright (C) 2001-2011 OTRS AG, http://otrs.org/
-# --
-# $Id: DashboardGenericStats.pm,v 1.19 2011/11/24 10:22:50 mg Exp $
+# Copyright (C) 2001-2014 Perl-Services.de, http://perl-services.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
@@ -14,8 +12,7 @@ package Kernel::Output::HTML::DashboardGenericStats;
 use strict;
 use warnings;
 
-use vars qw($VERSION);
-$VERSION = qw($Revision: 1.19 $) [1];
+our $ObjectManagerDisabled = 1;
 
 sub new {
     my ( $Type, %Param ) = @_;
@@ -24,12 +21,9 @@ sub new {
     my $Self = {%Param};
     bless( $Self, $Type );
 
-    # get needed objects
-    for my $Object (
-        qw(Config Name ConfigObject LogObject DBObject LayoutObject ParamObject TicketObject UserID)
-        )
-    {
-        die "Got no $Object!" if !$Self->{$Object};
+    # get needed parameters
+    for my $Needed (qw(Config Name UserID)) {
+        die "Got no $Needed!" if !$Self->{$Needed};
     }
 
     return $Self;
@@ -44,18 +38,48 @@ sub Preferences {
 sub Config {
     my ( $Self, %Param ) = @_;
 
-    my $Key = $Self->{LayoutObject}->{UserLanguage} . '-' . $Self->{Name};
     return (
         %{ $Self->{Config} },
-        CacheKey => 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key,
-    );
 
+        # Don't cache this globally as it contains JS that is not inside of the HTML.
+        CacheTTL => undef,
+        CacheKey => undef,
+    );
 }
 
 sub Run {
     my ( $Self, %Param ) = @_;
 
-    my $Days = $Self->{ConfigObject}->Get('GenericDashboardStats::Days') || 14;
+# ---
+# PS
+# ---
+    my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
+# ---
+
+    # get layout object
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
+    my $Key      = $LayoutObject->{UserLanguage} . '-' . $Self->{Name};
+    my $CacheKey = 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key;
+
+    my $Cache = $Self->{CacheObject}->Get(
+        Type => 'Dashboard',
+        Key  => $CacheKey,
+    );
+
+    if ( ref $Cache ) {
+        return $LayoutObject->Output(
+            TemplateFile   => 'AgentDashboardTicketStats',
+            Data           => $Cache,
+            KeepScriptTags => $Param{AJAX},
+        );
+    }
+
+# ---
+# PS
+# ---
+    my $Days = $ConfigObject->Get('GenericDashboardStats::Days') || 14;
+# ---
 
     my %Axis = (
         '7Day' => {
@@ -69,11 +93,19 @@ sub Run {
         },
     );
 
+    my @TicketsCreated = ();
+    my @TicketsClosed  = ();
     my @TicketWeekdays = ();
     my @TicketYAxis    = ();
     my $Max            = 0;
 
-    my %Stats = %{ $Self->{ConfigObject}->Get( 'GenericDashboardStats::Stats' ) || {} };
+    # get ticket object
+    my $TicketObject = $Kernel::OM->Get('Kernel::System::Ticket');
+
+# ---
+# PS
+# ---
+    my %Stats = %{ $ConfigObject->Get( 'GenericDashboardStats::Stats' ) || {} };
 
     for my $Stat ( keys %Stats ) {
         my $Key         = $Stats{$Stat}->{OptionKey};
@@ -85,7 +117,9 @@ sub Run {
         $Stats{$Stat}->{label} = $Self->{LayoutObject}->{LanguageObject}->Get( $Label );
     }
 
+#    for my $Key ( 0 .. 6 ) {
     for my $Key ( 0 .. $Days-1 ) {
+# ---
 
         my $TimeNow = $Self->{TimeObject}->SystemTime();
         if ($Key) {
@@ -98,15 +132,27 @@ sub Run {
 
         unshift(
             @TicketWeekdays,
-            [ ($Days-1) - $Key, $Self->{LayoutObject}->{LanguageObject}->Get( $Axis{'7Day'}->{$WeekDay} ) ]
+
+# ---
+# PS
+# ---
+#            [
+#                6 - $Key,
+#                $LayoutObject->{LanguageObject}->Translate( $Axis{'7Day'}->{$WeekDay} )
+#            ]
+            [ ($Days-1) - $Key, $LayoutObject->{LanguageObject}->Get( $Axis{'7Day'}->{$WeekDay} ) ]
+# ---
         );
 
+# ---
+# PS
+# ---
         for my $Stat ( keys %Stats ) {
             my %Options = (
                 $Stats{$Stat}->{type} . 'TimeNewerDate' => "$Year-$Month-$Day 00:00:00",
                 $Stats{$Stat}->{type} . 'TimeOlderDate' => "$Year-$Month-$Day 23:59:59",
 
-		%{ $Stats{$Stat}->{SearchOptions} },
+		        %{ $Stats{$Stat}->{SearchOptions} },
             );
 
             my $CountCreated = $Self->{TicketObject}->TicketSearch(
@@ -157,6 +203,8 @@ sub Run {
             push @TicketYAxis, $i
         }
     }
+    my $ClosedText  = $LayoutObject->{LanguageObject}->Translate('Closed');
+    my $CreatedText = $LayoutObject->{LanguageObject}->Translate('Created');
 
     my @ChartData;
 
@@ -169,29 +217,40 @@ sub Run {
             };
     }
 
-    my $ChartDataJSON = $Self->{LayoutObject}->JSONEncode(
+    my $ChartDataJSON = $LayoutObject->JSONEncode(
         Data => \@ChartData,
     );
 
-    my $TicketWeekdaysJSON = $Self->{LayoutObject}->JSONEncode(
+    my $TicketWeekdaysJSON = $LayoutObject->JSONEncode(
         Data => \@TicketWeekdays,
     );
 
-    my $TicketYAxisJSON = $Self->{LayoutObject}->JSONEncode(
+    my $TicketYAxisJSON = $LayoutObject->JSONEncode(
         Data => \@TicketYAxis,
     );
 
-    my $Content = $Self->{LayoutObject}->Output(
-        TemplateFile => 'AgentDashboardTicketStats',
-        Data         => {
-            %{ $Self->{Config} },
-            Key            => int rand 99999,
-            ChartData      => $ChartDataJSON,
-            TicketWeekdays => $TicketWeekdaysJSON,
-            TicketYAxis    => $TicketYAxisJSON,
-            Days           => $Days,
-        },
-        KeepScriptTags => 1,
+    my %Data = (
+        %{ $Self->{Config} },
+        Key            => int rand 99999,
+        ChartData      => $ChartDataJSON,
+        TicketWeekdays => $TicketWeekdaysJSON,
+        TicketYAxis    => $TicketYAxisJSON,
+        Days           => $Days,
+    );
+
+    if ( $Self->{Config}->{CacheTTLLocal} ) {
+        $Self->{CacheObject}->Set(
+            Type  => 'Dashboard',
+            Key   => $CacheKey,
+            Value => \%Data,
+            TTL   => $Self->{Config}->{CacheTTLLocal} * 60,
+        );
+    }
+
+    my $Content = $LayoutObject->Output(
+        TemplateFile   => 'AgentDashboardTicketStats',
+        Data           => \%Data,
+        KeepScriptTags => $Param{AJAX},
     );
 
     return $Content;
