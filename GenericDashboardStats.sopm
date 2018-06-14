@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <otrs_package version="1.0">
+    <!-- GENERATED WITH OTRS::OPM::Maker::Command::sopm (1.4) -->
     <Name>GenericDashboardStats</Name>
-    <Version>4.0.1</Version>
-    <Framework>4.0.x</Framework>
+    <Version>5.0.1</Version>
+    <Framework>5.0.x</Framework>
     <Vendor>Perl-Services.de</Vendor>
-    <URL>http://perl-services.de/</URL>
-    <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
-    <Description Lang="en">A more generic Dashboard stats widget.</Description>
+    <URL>http://www.perl-services.de</URL>
     <Description Lang="de">Ein generisches Statistik Modul für die Übersicht.</Description>
+    <Description Lang="en">A more generic Dashboard stats widget.</Description>
+    <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
     <Filelist>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/DashboardGenericStats.pm"/>
-        <File Permission="644" Location="Kernel/Config/Files/GenericDashboardStats.xml"/>
-        <File Permission="644" Location="doc/en/GenericDashboardStats.pod"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Dashboard/TicketStatsGeneric.pm" />
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Templates/Standard/AgentDashboardTicketStats.tt" />
+        <File Permission="644" Location="Kernel/Config/Files/GenericDashboardStats.xml" />
+        <File Permission="644" Location="doc/en/GenericDashboardStats.pod" />
+        <File Permission="644" Location="var/httpd/htdocs/js/Core.UI.AdvancedChart.js" />
     </Filelist>
 </otrs_package>

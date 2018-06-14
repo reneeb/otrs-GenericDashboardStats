@@ -1,0 +1,19 @@
+{
+    "name": "GenericDashboardStats",
+    "version": "5.0.1",
+    "framework": [
+        "5.0.x"
+    ],
+    "vendor": {
+        "name":  "Perl-Services.de",
+        "url": "http://www.perl-services.de"
+    },
+    "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007",
+    "description" : {
+        "en": "A more generic Dashboard stats widget.",
+        "de": "Ein generisches Statistik Modul für die Übersicht."
+    },
+    "exclude_files" : [
+        "doc/GenericDashboardStats.json"
+    ]
+}
