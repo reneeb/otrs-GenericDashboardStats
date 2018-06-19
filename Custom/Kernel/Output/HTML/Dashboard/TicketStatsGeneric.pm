@@ -65,7 +65,6 @@ sub Run {
         Type => 'Dashboard',
         Key  => $CacheKey,
     );
-undef $Cache;
 
     if ( ref $Cache ) {
         return $LayoutObject->Output(
@@ -120,7 +119,6 @@ undef $Cache;
     my %StatIndexes;
 
     my %Stats = %{ $ConfigObject->Get( 'GenericDashboardStats::Stats' ) || {} };
-$Kernel::OM->Get('Kernel::System::Log')->Log( Priority => error => Message => $Kernel::OM->Get('Kernel::System::Main')->Dump( \%Stats ) );
 
     for my $Stat ( sort keys %Stats ) {
         my $Key         = $Stats{$Stat}->{OptionKey};
