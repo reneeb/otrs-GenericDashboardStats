@@ -1,15 +1,17 @@
 # --
-# Copyright (C) 2001-2016 OTRS AG, http://otrs.com/
+# Copyright (C) 2001-2020 OTRS AG, https://otrs.com/
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
-# the enclosed file COPYING for license information (AGPL). If you
-# did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
+# the enclosed file COPYING for license information (GPL). If you
+# did not receive this file, see https://www.gnu.org/licenses/gpl-3.0.txt.
 # --
 
 package Kernel::Output::HTML::Dashboard::TicketStatsGeneric;
 
 use strict;
 use warnings;
+
+use Kernel::System::DateTime qw(:all);
 
 our $ObjectManagerDisabled = 1;
 
@@ -67,10 +69,17 @@ sub Run {
     );
 
     if ( ref $Cache ) {
+
+        # send data to JS
+        $LayoutObject->AddJSData(
+            Key   => 'DashboardTicketStats',
+            Value => $Cache,
+        );
+
         return $LayoutObject->Output(
-            TemplateFile   => 'AgentDashboardTicketStats',
-            Data           => $Cache,
-            KeepScriptTags => $Param{AJAX},
+            TemplateFile => 'AgentDashboardTicketStats',
+            Data         => $Cache,
+            AJAX         => $Param{AJAX},
         );
     }
 
@@ -86,31 +95,17 @@ sub Run {
         },
     );
 
-    my $ClosedText      = $LayoutObject->{LanguageObject}->Translate('Closed');
-    my $CreatedText     = $LayoutObject->{LanguageObject}->Translate('Created');
-    my $StateText       = $LayoutObject->{LanguageObject}->Translate('State');
-    my @TicketsCreated  = ();
-    my @TicketsClosed   = ();
-    my @TicketWeekdays  = ();
-    my $Max             = 0;
-    my $UseUserTimeZone = 0;
+    my $ClosedText     = $LayoutObject->{LanguageObject}->Translate('Closed');
+    my $CreatedText    = $LayoutObject->{LanguageObject}->Translate('Created');
+    my $StateText      = $LayoutObject->{LanguageObject}->Translate('State');
+    my @TicketsCreated = ();
+    my @TicketsClosed  = ();
+    my @TicketWeekdays = ();
+    my $Max            = 0;
 
-    # get ticket object
     my $TicketObject = $Kernel::OM->Get('Kernel::System::Ticket');
 
-    # get the time object
-    my $TimeObject = $Kernel::OM->Get('Kernel::System::Time');
-
-    # use the UserTimeObject, if the system use UTC as system time and the TimeZoneUser feature is active
-    if (
-        !$Kernel::OM->Get('Kernel::System::Time')->ServerLocalTimeOffsetSeconds()
-        && $Kernel::OM->Get('Kernel::Config')->Get('TimeZoneUser')
-        && $Self->{UserTimeZone}
-        )
-    {
-        $UseUserTimeZone = 1;
-        $TimeObject      = $LayoutObject->{UserTimeObject};
-    }
+    my $TimeZone = $Self->{UserTimeZone} || OTRSTimeZoneGet();
 
 # ---
 # PS
@@ -135,53 +130,37 @@ sub Run {
 
     my $Days = $ConfigObject->Get('GenericDashboardStats::Days') || 14;
 
-#    for my $Key ( 0 .. 6 ) {
-    for my $Key ( 0 .. $Days-1 ) {
+#    for my $DaysBack ( 0 .. 6 ) {
+    for my $DaysBack ( 0 .. $Days-1 ) {
 # ---
-
-        # get the system time
-        my $TimeNow = $TimeObject->SystemTime();
 
         # cache results for 30 min. for todays stats
         my $CacheTTL = 60 * 30;
 
-        if ($Key) {
-            $TimeNow = $TimeNow - ( 60 * 60 * 24 * $Key );
+        my $DateTimeObject = $Kernel::OM->Create(
+            'Kernel::System::DateTime',
+            ObjectParams => {
+                TimeZone => $TimeZone,
+            }
+        );
+        if ($DaysBack) {
+            $DateTimeObject->Subtract( Days => $DaysBack );
 
             # for past 6 days cache results for 8 days (should not change)
             $CacheTTL = 60 * 60 * 24 * 8;
         }
-        my ( $Sec, $Min, $Hour, $Day, $Month, $Year, $WeekDay ) = $TimeObject->SystemTime2Date(
-            SystemTime => $TimeNow,
-        );
+        $DateTimeObject->ToOTRSTimeZone();
+
+        my $DateTimeValues = $DateTimeObject->Get();
+        my $WeekDay        = $DateTimeValues->{DayOfWeek} == 7 ? 0 : $DateTimeValues->{DayOfWeek};
 
         unshift(
             @TicketWeekdays,
             $LayoutObject->{LanguageObject}->Translate( $Axis{'7Day'}->{$WeekDay} )
         );
 
-        my $TimeStart = "$Year-$Month-$Day 00:00:00";
-        my $TimeStop  = "$Year-$Month-$Day 23:59:59";
-
-        if ($UseUserTimeZone) {
-
-            my $SystemTimeStart = $TimeObject->TimeStamp2SystemTime(
-                String => $TimeStart,
-            );
-            my $SystemTimeStop = $TimeObject->TimeStamp2SystemTime(
-                String => $TimeStop,
-            );
-
-            $SystemTimeStart = $SystemTimeStart - ( $Self->{UserTimeZone} * 3600 );
-            $SystemTimeStop  = $SystemTimeStop -  ( $Self->{UserTimeZone} * 3600 );
-
-            $TimeStart = $TimeObject->SystemTime2TimeStamp(
-                SystemTime => $SystemTimeStart,
-            );
-            $TimeStop = $TimeObject->SystemTime2TimeStamp(
-                SystemTime => $SystemTimeStop,
-            );
-        }
+        my $TimeStart = $DateTimeObject->Format( Format => '%Y-%m-%d 00:00:00' );
+        my $TimeStop  = $DateTimeObject->Format( Format => '%Y-%m-%d 23:59:59' );
 # ---
 # PS
 # ---
@@ -214,9 +193,10 @@ sub Run {
             my $Index = $StatIndexes{$Stat};
             splice @{ $ShownStats[$Index] }, 1, 0,$Count;
         }
-# ---
 
-=pod
+        do {{
+            last;
+# ---
 
         my $CountCreated = $TicketObject->TicketSearch(
 
@@ -234,8 +214,8 @@ sub Run {
 
             # search with user permissions
             Permission => $Self->{Config}->{Permission} || 'ro',
-            UserID => $Self->{UserID},
-        );
+            UserID     => $Self->{UserID},
+        ) || 0;
         if ( $CountCreated && $CountCreated > $Max ) {
             $Max = $CountCreated;
         }
@@ -257,16 +237,17 @@ sub Run {
 
             # search with user permissions
             Permission => $Self->{Config}->{Permission} || 'ro',
-            UserID => $Self->{UserID},
-        );
+            UserID     => $Self->{UserID},
+        ) || 0;
         if ( $CountClosed && $CountClosed > $Max ) {
             $Max = $CountClosed;
         }
         push @TicketsClosed, $CountClosed;
-    }
-
-=cut
-
+# ---
+# PS
+# ---
+        }}
+# ---
     }
 
     unshift(
@@ -293,14 +274,10 @@ sub Run {
 # ---
     );
 
-    my $ChartDataJSON = $LayoutObject->JSONEncode(
-        Data => \@ChartData,
-    );
-
     my %Data = (
         %{ $Self->{Config} },
         Key       => int rand 99999,
-        ChartData => $ChartDataJSON,
+        ChartData => \@ChartData,
     );
 
     if ( $Self->{Config}->{CacheTTLLocal} ) {
@@ -312,13 +289,20 @@ sub Run {
         );
     }
 
+    # send data to JS
+    $LayoutObject->AddJSData(
+        Key   => 'DashboardTicketStats',
+        Value => \%Data
+    );
+
     my $Content = $LayoutObject->Output(
-        TemplateFile   => 'AgentDashboardTicketStats',
-        Data           => \%Data,
-        KeepScriptTags => $Param{AJAX},
+        TemplateFile => 'AgentDashboardTicketStats',
+        Data         => \%Data,
+        AJAX         => $Param{AJAX},
     );
 
     return $Content;
 }
 
 1;
+
