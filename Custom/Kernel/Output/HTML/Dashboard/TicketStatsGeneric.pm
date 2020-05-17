@@ -51,17 +51,21 @@ sub Config {
 sub Run {
     my ( $Self, %Param ) = @_;
 
-# ---
-# PS
-# ---
-    my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
-# ---
-
     # get layout object
     my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
 
     my $Key      = $LayoutObject->{UserLanguage} . '-' . $Self->{Name};
     my $CacheKey = 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key;
+
+# ---
+# PS
+# ---
+    my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
+    my $GroupObject  = $Kernel::OM->Get('Kernel::System::Group');
+
+    my $ConfigKey    = $Self->{Config}->{SysConfigBase} || 'GenericDashboardStats';
+    $CacheKey        = 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key . '-' . $ConfigKey;
+# ---
 
     my $Cache = $Kernel::OM->Get('Kernel::System::Cache')->Get(
         Type => 'Dashboard',
@@ -113,8 +117,10 @@ sub Run {
     my @ShownStats;
     my %StatIndexes;
 
-    my %Stats = %{ $ConfigObject->Get( 'GenericDashboardStats::Stats' ) || {} };
+    my %Stats     = %{ $ConfigObject->Get( $ConfigKey . '::Stats' ) || {} };
+    my %UserStats = %Stats;
 
+    GENERICSTAT:
     for my $Stat ( sort keys %Stats ) {
         my $Key         = $Stats{$Stat}->{OptionKey};
         my $StatsConfig = $ConfigObject->Get( $Key ) || {};
@@ -124,11 +130,37 @@ sub Run {
         my $Label = $Stats{$Stat}->{label} || $Stat;
         $Stats{$Stat}->{label} = $LayoutObject->{LanguageObject}->Translate( $Label );
 
+        # check permissions
+        if ( $Stats{$Stat}->{group} ) {
+            my $PermissionOK = 0;
+            my @Groups       = split /;/, $Stats{$Stat}->{group};
+
+            STATGROUP:
+            for my $Group (@Groups) {
+                my $HasPermission = $GroupObject->PermissionCheck(
+                    UserID    => $Self->{UserID},
+                    GroupName => $Group,
+                    Type      => 'ro',
+                );
+
+                if ($HasPermission) {
+                    $PermissionOK = 1;
+                    last STATGROUP;
+                }
+            }
+
+            if ( !$PermissionOK ) {
+                delete $UserStats{$Stat};
+                next GENERICSTAT;
+            }
+        }
+
+
         push @ShownStats, [ $Stats{$Stat}->{label} ];
         $StatIndexes{$Stat} = $#ShownStats;
     }
 
-    my $Days = $ConfigObject->Get('GenericDashboardStats::Days') || 14;
+    my $Days = $ConfigObject->Get( $ConfigKey . '::Days') || 14;
 
 #    for my $DaysBack ( 0 .. 6 ) {
     for my $DaysBack ( 0 .. $Days-1 ) {
@@ -165,7 +197,7 @@ sub Run {
 # PS
 # ---
 
-        for my $Stat ( sort keys %Stats ) {
+        for my $Stat ( sort keys %UserStats ) {
             my %Options = (
                 $Stats{$Stat}->{type} . 'TimeNewerDate' => $TimeStart,
                 $Stats{$Stat}->{type} . 'TimeOlderDate' => $TimeStop,
@@ -177,6 +209,7 @@ sub Run {
 
                 # cache search result 30 min
                 CacheTTL => 60 * 30,
+                CacheTTL => 0,
 
                 CustomerID => $Param{Data}->{UserCustomerID},
                 Result     => 'COUNT',
@@ -194,8 +227,7 @@ sub Run {
             splice @{ $ShownStats[$Index] }, 1, 0,$Count;
         }
 
-        do {{
-            last;
+        if ( 0 ) {
 # ---
 
         my $CountCreated = $TicketObject->TicketSearch(
@@ -246,7 +278,7 @@ sub Run {
 # ---
 # PS
 # ---
-        }}
+        }
 # ---
     }
 
@@ -261,7 +293,7 @@ sub Run {
 # ---
 #        $LayoutObject->{LanguageObject}->Translate('7 Day Stats'),
         $LayoutObject->{LanguageObject}->Translate(
-            $ConfigObject->Get('GenericDashboardStats::Title')
+            $ConfigObject->Get( $ConfigKey . '::Title')
         ),
 # ---
         \@TicketWeekdays,
