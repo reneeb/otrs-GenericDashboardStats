@@ -16,27 +16,34 @@ To create new stats you have to add only your own configuration file. The subseq
 
 =head2 The "standard" closed ticket graph
 
-Create a file C<$OTRS_HOME/Kernel/Config/Files/AnyName.xml> where "AnyName" can be whatever you want. Though I recommend to name it the same way you want to name the graph.
+Create a file C<$OTRS_HOME/Kernel/Config/Files/XML/AnyName.xml> where "AnyName" can be whatever you want. Though I recommend to name it the same way you want to name the graph.
 
 The XML file has this content:
 
   <?xml version="1.0" encoding="utf-8"?>
-  <otrs_config version="1.0" init="Application">
-    <CVS>$Id: Ticket.xml,v 1.500 2012/02/14 08:59:22 mg Exp $</CVS>
-    <ConfigItem Name="GenericDashboardStats::Stats###030-Closed" Required="0" Valid="1">
-        <Description Translatable="1">How many tickets were created the day</Description>
-        <Group>GenericDashboardStats</Group>
-        <SubGroup>Stats</SubGroup>
-        <Setting>
-            <Hash>
-                <Item Key="OptionKey">ClosedStats</Item>
-                <Item Key="type">TicketClose</Item>
-                <Item Key="color">#eeff00</Item>
-                <Item Key="label">Closed</Item>
-            </Hash>
-        </Setting>
-    </ConfigItem>
+  <otrs_config version="2.0" init="Application">
+      <Setting Name="DashboardBackend###256-GenericStats" Required="0" Valid="1">
+          <Description Translatable="1">...</Description>
+          <Navigation>Frontend::Agent::View::Dashboard</Navigation>
+          <Value>
+              <Hash>
+                  <Item Key="Module">Kernel::Output::HTML::Dashboard::TicketStatsGeneric</Item>
+                  <Item Key="SysConfigBase">GenericDashboardStats</Item>
+                  <Item Key="Title">Generic Ticket Stats</Item>
+                  <Item Key="Created">1</Item>
+                  <Item Key="Closed">1</Item>
+                  <Item Key="Permission">rw</Item>
+                  <Item Key="Block">ContentSmall</Item>
+                  <Item Key="Group"></Item>
+                  <Item Key="Default">1</Item>
+                  <Item Key="CacheTTL">30</Item>
+                  <Item Key="Mandatory">0</Item>
+              </Hash>
+          </Value>
+      </Setting>
   </otrs_config>
+
+After you've saved the file, run C<perl bin/otrs.Console.pl Maint::Config::Rebuild>. 
 
 That's it! Nothing more.
 
@@ -94,32 +101,26 @@ Mouse over label for the graph.
 
 An other example: Show graph of ticket that were created in queue "Junk"
 
-  <?xml version="1.0" encoding="utf-8"?>
-  <otrs_config version="1.0" init="Application">
-      <ConfigItem Name="GenericDashboardStats::Stats###001-Created-Junk" Required="0" Valid="1">
-          <Description Translatable="1">How many tickets were created the day in the queue Junk</Description>
-          <Group>GenericDashboardStats</Group>
-          <SubGroup>Stats</SubGroup>
-          <Setting>
-              <Hash>
-                  <Item Key="OptionKey">CreatedJunkStats</Item>
-                  <Item Key="type">TicketCreate</Item>
-                  <Item Key="color">#eeff00</Item>
-                  <Item Key="label">Created In Junk</Item>
-              </Hash>
-          </Setting>
-      </ConfigItem>
-      <ConfigItem Name="CreatedJunkStats###Queues" Required="0" Valid="1">
-          <Description Translatable="1">Define the Queues the CreatedJunkStats stat is for</Description>
-          <Group>GenericDashboardStats</Group>
-          <SubGroup>CreatedJunkStats</SubGroup>
-          <Setting>
-              <Array>
-                  <Item>Junk</Item>
-              </Array>
-          </Setting>
-      </ConfigItem>
-  </otrs_config>
+    <Setting Name="GenericDashboardStats::Stats###001-Created-Junk" Required="0" Valid="1">
+        <Description Translatable="1">How many tickets were created the day in the queue Junk</Description>
+        <Navigation>Stats</Navigation>
+        <Value>
+            <Hash>
+                <Item Key="OptionKey">CreatedJunkStats</Item>
+                <Item Key="type">TicketCreate</Item>
+                <Item Key="label">created in Junk</Item>
+            </Hash>
+        </Value>
+    </Setting>
+    <Setting Name="CreatedJunkStats###Queues" Required="0" Valid="1">
+        <Description Translatable="1">Define the Queues the CreatedJunkStats stat is for</Description>
+        <Navigation>CreatedJunkStats</Navigation>
+        <Value>
+            <Array>
+                <Item>Junk</Item>
+            </Array>
+        </Value>
+    </Setting>
 
 The first I<ConfigItem> part is described above. The second one adds more search paramters. The name of the item is created by the value of I<OptionKey> in the first config option then "###" and the last part of the name is the search option. At L<http://otrs.perl-services.de/docs/otrs/rel-3_3/kernel_system_ticketsearch.html> you can see all the options for the ticket search.
 
