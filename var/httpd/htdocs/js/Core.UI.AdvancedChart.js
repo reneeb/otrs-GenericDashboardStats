@@ -243,6 +243,15 @@ Core.UI.AdvancedChart = (function (TargetNS) {
         RawData.shift();
         Headings = RawData.shift();
 
+// ---
+// PS
+// ---
+        var LineColors = Colors;
+        if ( Options.Colors ) {
+            LineColors = Options.Colors;
+        }
+// ---
+
         $.each(RawData, function(DataIndex, DataElement) {
             var ResultLine;
 
@@ -253,7 +262,12 @@ Core.UI.AdvancedChart = (function (TargetNS) {
 
             ResultLine = {
                 key: DataElement[0],
-                color: Colors[Counter % Colors.length],
+// ---
+// PS
+// ---
+//                color: Colors[Counter % Colors.length],
+                color: LineColors[Counter % Colors.length],
+// ---
                 disabled: false,
                 area: true,
                 values: []

@@ -114,8 +114,15 @@ sub Run {
 # ---
 # PS
 # ---
+    my @DefaultColors = (
+        '#EC9073', '#6BAD54', '#E2F626', '#0F22E4', '#1FE362', '#C5F566', '#8D23A8', '#78A7FC',
+        '#DFC01B', '#43B261', '#53758D', '#C1AE45', '#6CD13D', '#E0CA0E', '#652188', '#3EBB34',
+        '#8F53EA', '#956669', '#34A0FB', '#F50178', '#AB766A', '#BEA029', '#ABE124', '#A68477',
+    );
+
     my @ShownStats;
     my %StatIndexes;
+    my @Colors;
 
     my %Stats     = %{ $ConfigObject->Get( $ConfigKey . '::Stats' ) || {} };
     my %UserStats = %Stats;
@@ -129,6 +136,8 @@ sub Run {
 
         my $Label = $Stats{$Stat}->{label} || $Stat;
         $Stats{$Stat}->{label} = $LayoutObject->{LanguageObject}->Translate( $Label );
+
+        push @Colors, $Stats{$Stat}->{color} // shift @DefaultColors;
 
         # check permissions
         if ( $Stats{$Stat}->{group} ) {
@@ -307,6 +316,11 @@ sub Run {
     );
 
     my %Data = (
+# ---
+# PS
+# ---
+        Colors => \@Colors,
+# ---
         %{ $Self->{Config} },
         Key       => int rand 99999,
         ChartData => \@ChartData,
@@ -323,7 +337,12 @@ sub Run {
 
     # send data to JS
     $LayoutObject->AddJSData(
-        Key   => 'DashboardTicketStats',
+# ---
+# PS
+# ---
+#        Key   => 'DashboardTicketStats',
+        Key   => 'GenericTicketStats-' . $Data{Key},
+# ---
         Value => \%Data
     );
 
