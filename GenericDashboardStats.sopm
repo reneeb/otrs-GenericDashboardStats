@@ -2,7 +2,7 @@
 <otrs_package version="1.0">
     <!-- GENERATED WITH OTRS::OPM::Maker::Command::sopm (1.4) -->
     <Name>GenericDashboardStats</Name>
-    <Version>6.0.1</Version>
+    <Version>6.0.2</Version>
     <Framework>6.0.x</Framework>
     <Vendor>Perl-Services.de</Vendor>
     <URL>http://www.perl-services.de</URL>
@@ -13,6 +13,7 @@
         <File Permission="644" Location="Custom/Kernel/Output/HTML/Dashboard/TicketStatsGeneric.pm" />
         <File Permission="644" Location="Kernel/Config/Files/XML/GenericDashboardStats.xml" />
         <File Permission="644" Location="doc/en/GenericDashboardStats.pod" />
+        <File Permission="644" Location="var/httpd/htdocs/js/Core.Agent.Dashboard.js" />
         <File Permission="644" Location="var/httpd/htdocs/js/Core.UI.AdvancedChart.js" />
     </Filelist>
 </otrs_package>
