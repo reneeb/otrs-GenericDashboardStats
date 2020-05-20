@@ -63,8 +63,13 @@ sub Run {
     my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
     my $GroupObject  = $Kernel::OM->Get('Kernel::System::Group');
 
-    my $ConfigKey    = $Self->{Config}->{SysConfigBase} || 'GenericDashboardStats';
-    $CacheKey        = 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key . '-' . $ConfigKey;
+    my $ConfigKey = $Self->{Config}->{SysConfigBase} || 'GenericDashboardStats';
+
+    if ( $Self->{Name} eq '0250-TicketStats' ) {
+        $ConfigKey = $Self->{Name};
+    }
+
+    $CacheKey = 'TicketStats' . '-' . $Self->{UserID} . '-' . $Key . '-' . $ConfigKey;
 # ---
 
     my $Cache = $Kernel::OM->Get('Kernel::System::Cache')->Get(
@@ -76,7 +81,12 @@ sub Run {
 
         # send data to JS
         $LayoutObject->AddJSData(
-            Key   => 'DashboardTicketStats',
+# ---
+# PS
+# ---
+#            Key   => 'DashboardTicketStats',
+            Key   => 'GenericTicketStats-' . $Cache->{Key},
+# ---
             Value => $Cache,
         );
 
@@ -169,7 +179,7 @@ sub Run {
         $StatIndexes{$Stat} = $#ShownStats;
     }
 
-    my $Days = $ConfigObject->Get( $ConfigKey . '::Days') || 14;
+    my $Days = $ConfigObject->Get( $ConfigKey . '::Days') || 7;
 
 #    for my $DaysBack ( 0 .. 6 ) {
     for my $DaysBack ( 0 .. $Days-1 ) {
@@ -236,7 +246,7 @@ sub Run {
             splice @{ $ShownStats[$Index] }, 1, 0,$Count;
         }
 
-        if ( 0 ) {
+        if ( $Self->{Name} eq '0250-TicketStats' ) {
 # ---
 
         my $CountCreated = $TicketObject->TicketSearch(
@@ -287,6 +297,10 @@ sub Run {
 # ---
 # PS
 # ---
+        @ShownStats = (
+            [ $CreatedText, reverse @TicketsCreated ],
+            [ $ClosedText,  reverse @TicketsClosed ],
+        );
         }
 # ---
     }
@@ -315,6 +329,12 @@ sub Run {
 # ---
     );
 
+# ---
+# PS
+# ---
+    @Colors = @DefaultColors if !@Colors;
+# ---
+
     my %Data = (
 # ---
 # PS
@@ -323,6 +343,11 @@ sub Run {
 # ---
         %{ $Self->{Config} },
         Key       => int rand 99999,
+# ---
+# PS
+# ---
+        Colors => \@Colors,
+# ---
         ChartData => \@ChartData,
     );
 
