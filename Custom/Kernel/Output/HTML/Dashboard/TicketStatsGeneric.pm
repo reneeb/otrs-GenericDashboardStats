@@ -139,15 +139,6 @@ sub Run {
 
     GENERICSTAT:
     for my $Stat ( sort keys %Stats ) {
-        my $Key         = $Stats{$Stat}->{OptionKey};
-        my $StatsConfig = $ConfigObject->Get( $Key ) || {};
-
-        $Stats{$Stat}->{SearchOptions} = $StatsConfig;
-
-        my $Label = $Stats{$Stat}->{label} || $Stat;
-        $Stats{$Stat}->{label} = $LayoutObject->{LanguageObject}->Translate( $Label );
-
-        push @Colors, $Stats{$Stat}->{color} // shift @DefaultColors;
 
         # check permissions
         if ( $Stats{$Stat}->{group} ) {
@@ -174,6 +165,15 @@ sub Run {
             }
         }
 
+        my $Key         = $Stats{$Stat}->{OptionKey};
+        my $StatsConfig = $ConfigObject->Get( $Key ) || {};
+
+        $Stats{$Stat}->{SearchOptions} = $StatsConfig;
+
+        my $Label = $Stats{$Stat}->{label} || $Stat;
+        $Stats{$Stat}->{label} = $LayoutObject->{LanguageObject}->Translate( $Label );
+
+        push @Colors, $Stats{$Stat}->{color} // shift @DefaultColors;
 
         push @ShownStats, [ $Stats{$Stat}->{label} ];
         $StatIndexes{$Stat} = $#ShownStats;
@@ -216,27 +216,45 @@ sub Run {
 # PS
 # ---
 
+        USERSTAT:
         for my $Stat ( sort keys %UserStats ) {
-            my %Options = (
-                $Stats{$Stat}->{type} . 'TimeNewerDate' => $TimeStart,
-                $Stats{$Stat}->{type} . 'TimeOlderDate' => $TimeStop,
-                %{ $Stats{$Stat}->{SearchOptions} },
-            );
+            my $Type = $Stats{$Stat}->{type};
 
-            my $Count = $TicketObject->TicketSearch(
-                %Options,
+            my $Count;
+            if ( $Type eq 'plugin' ) {
+                my $Plugin = $Kernel::OM->Get( $Stats{$Stat}->{module} );
+                next USERSTAT if !$Plugin;
 
-                # cache search result 30 min
-                CacheTTL => 60 * 30,
-                CacheTTL => 0,
+                my %Options = (
+                    'TimeNewerDate' => $TimeStart,
+                    'TimeOlderDate' => $TimeStop,
+                    %{ $Stats{$Stat}->{SearchOptions} },
+                );
 
-                CustomerID => $Param{Data}->{UserCustomerID},
-                Result     => 'COUNT',
+                $Count = $Plugin->Run( %Options );
+            }
+            else {
+                my %Options = (
+                    $Type . 'TimeNewerDate' => $TimeStart,
+                    $Type . 'TimeOlderDate' => $TimeStop,
+                    %{ $Stats{$Stat}->{SearchOptions} },
+                );
 
-                # search with user permissions
-                Permission => $Self->{Config}->{Permission} || 'ro',
-                UserID => $Self->{UserID},
-            );
+                $Count = $TicketObject->TicketSearch(
+                    %Options,
+
+                    # cache search result 30 min
+                    CacheTTL => 60 * 30,
+                    CacheTTL => 0,
+
+                    CustomerID => $Param{Data}->{UserCustomerID},
+                    Result     => 'COUNT',
+
+                    # search with user permissions
+                    Permission => $Self->{Config}->{Permission} || 'ro',
+                    UserID => $Self->{UserID},
+                );
+            }
 
             if ( $Count && $Count > $Max ) {
                 $Max = $Count;
