@@ -205,9 +205,21 @@ sub Run {
         my $DateTimeValues = $DateTimeObject->Get();
         my $WeekDay        = $DateTimeValues->{DayOfWeek} == 7 ? 0 : $DateTimeValues->{DayOfWeek};
 
+# ---
+# PS
+# ---
+        my $Tick = $Self->{Config}->{UseDate} ?
+            $DateTimeObject->Format( Format => $Self->{Config}->{DateFormat} || '%Y-%m-%d' ) :
+            $LayoutObject->{LanguageObject}->Translate( $Axis{'7Day'}->{$WeekDay} );
+# ---
         unshift(
             @TicketWeekdays,
-            $LayoutObject->{LanguageObject}->Translate( $Axis{'7Day'}->{$WeekDay} )
+# ---
+# PS
+# ---
+#            $LayoutObject->{LanguageObject}->Translate( $Axis{'7Day'}->{$WeekDay} )
+            $Tick
+# ---
         );
 
         my $TimeStart = $DateTimeObject->Format( Format => '%Y-%m-%d 00:00:00' );
@@ -359,6 +371,7 @@ sub Run {
 # ---
         Colors => \@Colors,
         Ticks  => [1..$Days],
+        ReduceXTicks => $Self->{Config}->{ReduceXTicks} || 0,
 # ---
         %{ $Self->{Config} },
         Key       => int rand 99999,

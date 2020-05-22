@@ -866,6 +866,9 @@ Core.Agent.Dashboard = (function (TargetNS) {
 
                 var ticks          = TicketStats.Ticks || StandardTicks;
                 var reduce_x_ticks = ticks.length > 20 ? true : false;
+                if ( TicketStats.ReduceXTicks ) {
+                    reduce_x_ticks = true;
+                }
 
                 window.setTimeout(function () {
                     Core.UI.AdvancedChart.Init(
