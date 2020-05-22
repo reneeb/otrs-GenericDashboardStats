@@ -45,7 +45,49 @@ The XML file has this content:
 
 After you've saved the file, run C<perl bin/otrs.Console.pl Maint::Config::Rebuild>. 
 
-That's it! Nothing more.
+That's it! Nothing more. That will give you the standard 7 days statistics. It defines a new Dashboard widget. What settings
+can use use (beside the standard ones used for the 7 days statistics)?
+
+=over 4
+
+=item * SysConfigBase
+
+This will be clear in the next section
+
+=item * UseDate
+
+In stock OTRS Community Edition, you'll see the weekday abbreviations on the X-axis. If you want to see the dates, you can set
+I<UseDate> to 1 and then you'll see them.
+
+=item * DateFormat
+
+By default the dates shown use this format: I<%Y-%m-%d> which means dates are shown as I<YYYY-MM-DD>. If you want an other format,
+you can define it here.
+
+=item * ReduceXTicks
+
+You are going to show a longer history? Then the labels on the X-axis are overlapping and you can't read them. Then set this to I<1>.
+
+=back
+
+But you want more, right? 
+
+You can define your own statistics. To define which statistics is shown in one widget, you have to define what string is used to "group"
+the settings in the system configuration. It's I<GenericDashboardStats> in this case. So to add a statistics with tickets
+that escalated, define a new setting:
+
+    <Setting Name="GenericDashboardStats::Stats###001-Created-Junk" Required="0" Valid="1">
+        <Description Translatable="1">How many tickets were created the day in the queue Junk</Description>
+        <Navigation>Stats</Navigation>
+        <Value>
+            <Hash>
+                <Item Key="OptionKey">CreatedJunkStats</Item>
+                <Item Key="type">TicketCreate</Item>
+                <Item Key="label">created in Junk</Item>
+            </Hash>
+        </Value>
+    </Setting>
+
 
 Now, what does the settings mean?
 
