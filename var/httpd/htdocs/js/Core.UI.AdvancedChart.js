@@ -334,12 +334,7 @@ Core.UI.AdvancedChart = (function (TargetNS) {
 // PS
 // ---
 //                Chart.xAxis.tickValues([1, 2, 3, 4, 5, 6, 7]);
-                var Ticks = new Array();
-                for ( var i = 1; i <= parseInt( Options.Ticks, 10 ); i++ ) {
-                    Ticks.push(i);
-                }
-
-                Chart.xAxis.tickValues(Ticks);
+                Chart.xAxis.tickValues( Options.Ticks );
 // ---
 
                 Chart.yAxis

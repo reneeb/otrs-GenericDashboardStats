@@ -854,6 +854,7 @@ Core.Agent.Dashboard = (function (TargetNS) {
      */
     function InitGenericDashboardTicketStats () {
         var Timeout = 500;
+        var StandardTicks = new Array( 1, 2, 3, 4, 5, 6, 7 );
 
         $('.D3GraphCanvas').each( function( index, element ) {
             var long_id = $(element).prop('id');
@@ -863,6 +864,9 @@ Core.Agent.Dashboard = (function (TargetNS) {
 
             if (typeof TicketStats !== 'undefined') {
 
+                var ticks          = TicketStats.Ticks || StandardTicks;
+                var reduce_x_ticks = ticks.length > 20 ? true : false;
+
                 window.setTimeout(function () {
                     Core.UI.AdvancedChart.Init(
                         "D3::SimpleLineChart",
@@ -870,8 +874,9 @@ Core.Agent.Dashboard = (function (TargetNS) {
                         'svg.GraphWidget' + TicketStats.Key,
                         {
                             Duration: 250,
-                            ReduceXTicks: false,
-                            Colors: TicketStats.Colors
+                            ReduceXTicks: reduce_x_ticks,
+                            Colors: TicketStats.Colors,
+                            Ticks: ticks
                         }
                     );
                 }, Timeout);

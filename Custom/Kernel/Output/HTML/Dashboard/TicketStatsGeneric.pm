@@ -358,14 +358,10 @@ sub Run {
 # PS
 # ---
         Colors => \@Colors,
+        Ticks  => [1..$Days],
 # ---
         %{ $Self->{Config} },
         Key       => int rand 99999,
-# ---
-# PS
-# ---
-        Colors => \@Colors,
-# ---
         ChartData => \@ChartData,
     );
 
