@@ -240,7 +240,10 @@ sub Run {
                 my %Options = (
                     'TimeNewerDate' => $TimeStart,
                     'TimeOlderDate' => $TimeStop,
-                    %{ $Stats{$Stat}->{SearchOptions} },
+                    SearchOptions   => $Stats{$Stat}->{SearchOptions},
+                    Config          => $Self->{Config},
+                    Stat            => $Stat,
+                    GraphConfig     => $Stats{$Stat},
                 );
 
                 $Count = $Plugin->Run( %Options );
