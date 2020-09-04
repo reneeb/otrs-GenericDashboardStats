@@ -870,6 +870,11 @@ Core.Agent.Dashboard = (function (TargetNS) {
                     reduce_x_ticks = true;
                 }
 
+                var area = true;
+                if ( TicketStats.Area === "false" ) {
+                    area = false;
+                }
+
                 window.setTimeout(function () {
                     Core.UI.AdvancedChart.Init(
                         "D3::SimpleLineChart",
@@ -879,6 +884,7 @@ Core.Agent.Dashboard = (function (TargetNS) {
                             Duration: 250,
                             ReduceXTicks: reduce_x_ticks,
                             Colors: TicketStats.Colors,
+                            Area: area,
                             Ticks: ticks
                         }
                     );

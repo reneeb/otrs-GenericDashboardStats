@@ -269,7 +269,12 @@ Core.UI.AdvancedChart = (function (TargetNS) {
                 color: LineColors[Counter % Colors.length],
 // ---
                 disabled: false,
-                area: true,
+// ---
+// PS
+// ---
+//                area: true,
+                area: Options.Area,
+// ---
                 values: []
             };
 

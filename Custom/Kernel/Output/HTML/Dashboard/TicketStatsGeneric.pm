@@ -369,14 +369,15 @@ sub Run {
 # ---
 
     my %Data = (
+        %{ $Self->{Config} },
 # ---
 # PS
 # ---
         Colors => \@Colors,
         Ticks  => [1..$Days],
         ReduceXTicks => $Self->{Config}->{ReduceXTicks} || 0,
+        Area         => ( $Self->{Config}->{Area} eq 'false' ? 'false' : 'true' ),
 # ---
-        %{ $Self->{Config} },
         Key       => int rand 99999,
         ChartData => \@ChartData,
     );
