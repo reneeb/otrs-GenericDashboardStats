@@ -127,7 +127,7 @@ Tickets changed on the given day.
 
 =item * ArticleCreate
 
-articles with create time after ... (article newer than this date).
+articles created at the given day
 
 =back
 
